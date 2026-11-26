@@ -1,10 +1,18 @@
 # ModernOverlayVR
 
-Display EDMCModernOverlay broadcasts inside Elite Dangerous in VR on Linux. The EDMC plugin runs the renderer and the native OpenXR layer composites its output. Elite must already run through a **native Linux OpenXR loader** (for example through a working OpenComposite setup).
+ModernOverlayVR displays EDMCModernOverlay broadcasts inside Elite Dangerous in VR. It runs on **Linux only**.
+
+The EDMC plugin starts a host renderer that receives ModernOverlay broadcasts and writes frames to shared memory. A native OpenXR API layer reads those frames and submits the overlay to the VR compositor. The installer places the layer in the installation prefix. The launcher wrapper explicitly enables it for the game invocation through `XR_API_LAYER_PATH` and `XR_ENABLE_API_LAYERS`.
+
+## Requirements
+
+- Elite Dangerous already running in VR through a native Linux OpenXR loader, for example via OpenComposite, with a working OpenXR runtime such as WiVRn.
+- EDMC and [EDMCModernOverlay 0.9.2](https://github.com/SweetJonnySauce/EDMCModernOverlay/releases/tag/0.9.2). Enable EDMCModernOverlay in the same EDMC plugins directory as ModernOverlayVR. The renderer imports Python modules from that installation.
+- CMake 3.18 or newer, a C++17 compiler, OpenXR and Vulkan development files, and nlohmann-json development headers to build the layer.
+- Host `/usr/bin/python3` with PySide6 to run the renderer.
+- For Flatpak EDMC, permission to launch the renderer on the host via `flatpak-spawn --host` (access to the `org.freedesktop.Flatpak` session-bus service). The host interpreter must be able to read the plugin directory and write to the adjacent `edmo-vr` directory.
 
 ## Install
-
-Install CMake, a C++17 compiler, OpenXR and Vulkan development files, and nlohmann-json. The host renderer uses /usr/bin/python3 with PySide6. Install and enable EDMCModernOverlay in the same EDMC plugins directory. Flatpak EDMC must be able to run the host renderer via flatpak-spawn --host.
 
 From the checkout, run one of the following. Close EDMC and Elite before updating.
 
