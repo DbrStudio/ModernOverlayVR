@@ -9,6 +9,7 @@ from tkinter import messagebox, ttk
 import myNotebook as nb
 import vr_settings as vr
 
+__version__ = "0.1.0"
 NAME = "ModernOverlay VR"
 LOG = logging.getLogger("EDMarketConnector.ModernOverlayVR")
 LABELS = dict(anchor="Anchor", shape="Display shape", resolution="Resolution (pixels)",
