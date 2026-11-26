@@ -18,6 +18,7 @@ LABELS = dict(anchor="Anchor", shape="Display shape", resolution="Resolution (pi
 NAMES = {"room": "Room-locked (follows Elite recenter)", "head": "Head-locked", "curved": "Curved", "flat": "Flat"}
 process = None
 fields = {}
+cancel_preview = None
 folder = data = settings = None
 
 
@@ -72,8 +73,64 @@ def plugin_stop():
     stop_renderer()
 
 
+def numeric_controls(frame, row, key, text, changed):
+    low, high = vr.LIMITS[key]
+    step = 1 if key == "arc" else 0.01
+    position = tk.DoubleVar(frame, vr.number(key, text.get()))
+
+    def drag(raw):
+        value = round(max(low, min(high, round(float(raw) / step) * step)), 2)
+        text.set(f"{value:g}")
+        changed(key, value)
+
+    def edit(*_):
+        try:
+            position.set(vr.number(key, text.get()))
+        except ValueError:
+            pass  # Allow intermediate input such as a minus sign.
+
+    text.trace_add("write", edit)
+    scale = ttk.Scale(frame, from_=low, to=high, variable=position, command=drag)
+    scale.grid(row=row, column=1, sticky="ew", padx=8)
+    ttk.Entry(frame, textvariable=text, width=10).grid(row=row, column=2, padx=8)
+
+
 def plugin_prefs(parent, cmdr, is_beta):
+    global cancel_preview
+    if cancel_preview:
+        cancel_preview()
     frame = nb.Frame(parent)
+    frame.columnconfigure(1, weight=1)
+    preview = tk.BooleanVar(frame, False)
+    pending = {}
+    timer = None
+
+    def flush():
+        nonlocal timer
+        global settings
+        timer = None
+        updated = vr.validate({**settings, **pending})
+        pending.clear()
+        if updated != settings:
+            vr.save(data, updated)
+            settings = updated
+
+    def cancel():
+        nonlocal timer
+        if timer is not None:
+            frame.after_cancel(timer)
+            timer = None
+        pending.clear()
+
+    def moved(key, value):
+        nonlocal timer
+        if preview.get():
+            pending[key] = value
+            if timer is None:
+                timer = frame.after(200, flush)
+
+    cancel_preview = cancel
+    frame.bind("<Destroy>", lambda event: cancel() if event.widget is frame else None)
     fields.clear()
     fields["enabled"] = tk.BooleanVar(frame, settings["enabled"])
     nb.Checkbutton(frame, text="Start VR overlay with EDMC", variable=fields["enabled"]).grid(
@@ -86,8 +143,12 @@ def plugin_prefs(parent, cmdr, is_beta):
             widget = ttk.Combobox(frame, state="readonly", textvariable=var,
                                   values=[NAMES.get(v,v) for v in vr.CHOICES[key]])
         else:
-            widget = ttk.Entry(frame, textvariable=var)
+            numeric_controls(frame, row, key, var, moved)
+            continue
         widget.grid(row=row, column=1, sticky="ew", padx=8)
+    nb.Checkbutton(frame, text="Live preview while moving sliders", variable=preview,
+                   command=cancel).grid(row=9, columnspan=3, sticky="w", padx=8)
+
     def renderer_status():
         return "Renderer running" if process and process.poll() is None else "Renderer stopped"
 
@@ -104,6 +165,8 @@ def plugin_prefs(parent, cmdr, is_beta):
 
 def apply_settings():
     global settings
+    if cancel_preview:
+        cancel_preview()
     if not fields:
         return
     reverse = {label: key for key, label in NAMES.items()}

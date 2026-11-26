@@ -11,6 +11,14 @@ CHOICES = dict(anchor=("room", "head"), shape=("curved", "flat"),
 LIMITS = dict(width=(0.1, 5), distance=(0.1, 10), arc=(5, 180), x=(-5, 5), y=(-5, 5))
 
 
+def number(key, raw):
+    low, high = LIMITS[key]
+    value = float(str(raw).replace(",", "."))
+    if not math.isfinite(value) or not low <= value <= high:
+        raise ValueError(f"{key}: {low} … {high}")
+    return value
+
+
 def validate(values):
     settings = {**DEFAULT, **values}
     for key, choices in CHOICES.items():
@@ -18,11 +26,8 @@ def validate(values):
             raise ValueError(f"{key}: {choices}")
     if type(settings["enabled"]) is not bool:
         raise ValueError("enabled")
-    for key, (low, high) in LIMITS.items():
-        value = float(str(settings[key]).replace(",", "."))
-        if not math.isfinite(value) or not low <= value <= high:
-            raise ValueError(f"{key}: {low} … {high}")
-        settings[key] = value
+    for key in LIMITS:
+        settings[key] = number(key, settings[key])
     return settings
 
 

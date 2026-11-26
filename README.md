@@ -26,7 +26,7 @@ The default prefix is $XDG_DATA_HOME/ModernOverlayVR (normally ~/.local/share/Mo
 
 ## Launch
 
-Start EDMC and enable **Start VR overlay with EDMC** in **ModernOverlay VR** preferences. Choose **Room-locked (follows Elite recenter)** to use Elite’s HMD recenter binding. Click **Apply** to change the display while Elite is running.
+Start EDMC and enable **Start VR overlay with EDMC** in **ModernOverlay VR** preferences. Choose **Room-locked (follows Elite recenter)** to use Elite’s HMD recenter binding. Adjust position, distance, width and arc angle with the sliders or enter precise values directly. Click **Apply** to update the display while Elite is running. Enable **Live preview while moving sliders** to apply slider movements automatically, up to five updates per second. Typed edits still use **Apply**.
 
 **Steam:** Keep the environment assignments from your working VR launch configuration. Insert the installed wrapper immediately before %command%. For example, replacing the path with your actual absolute path:
 
