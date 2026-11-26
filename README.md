@@ -60,6 +60,18 @@ The default TTL is 60 seconds. A primitive’s own `ttl` takes precedence over `
 
 The live setup verified so far uses Steam, Proton, OpenComposite, WiVRn and Flatpak EDMC. Native EDMC path selection has been tested with a temporary installation. Heroic still needs an in-game check.
 
+## Uninstall
+
+Close Elite and EDMC. Remove the ModernOverlayVR wrapper from your Steam launch options or Heroic wrapper settings before launching Elite again. From the checkout, run:
+
+```sh
+./uninstall.sh
+# If you installed to a custom prefix
+./uninstall.sh --prefix "/absolute/install directory"
+```
+
+The script uses the plugin path recorded in the selected installation prefix, including native EDMC, Flatpak, and custom paths. It removes the installed layer, launcher wrapper, calibration tool, and plugin files. EDMCModernOverlay, other plugins, and the `edmo-vr` directory (including display settings and renderer logs) are preserved. Installations made before `plugins-path` was recorded need to be updated with the original installer options before using this script.
+
 ## Build and test
 
 ```sh
