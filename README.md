@@ -30,6 +30,28 @@ PROTON_USE_EXTERNAL_VR=1 PRESSURE_VESSEL_IMPORT_OPENXR_1_RUNTIMES=1 "/absolute/i
 
 The wrapper accepts an optional live, panel (static test panel), or trace mode followed by the original command and arguments. It activates the layer for that invocation without inspecting any app ID or Wine prefix. Layer diagnostics go to stderr by default. Set EDMO_XR_LOG to an absolute writable file to capture them.
 
+## Check the overlay in VR
+
+With EDMC running and Elite open in VR through the wrapper in live mode, run the installed calibration tool. For the default install location:
+
+```sh
+~/.local/share/ModernOverlayVR/overlay-test --ttl 120
+```
+
+If you used a custom prefix or XDG data directory, run `overlay-test` from that installation. It reads the ModernOverlay port from the EDMC plugins directory selected at install time.
+
+Look for nine numbered blocks in a 3×3 grid. While they are visible, open EDMC’s **ModernOverlay VR** preferences, increase **Horizontal offset (m)** by 0.2 and click **Apply**. The grid should move sideways in the headset while Elite keeps running. Restore the previous value and click **Apply** again. The blocks expire after 120 seconds in this example; running the command again refreshes them.
+
+To send a single custom JSON primitive:
+
+```sh
+~/.local/share/ModernOverlayVR/overlay-test --ttl 30 '{"id":"vr-check","type":"message","text":"VR check","x":592,"y":452,"color":"#39c5bb"}'
+```
+
+The default TTL is 60 seconds. A primitive’s own `ttl` takes precedence over `--ttl`.
+
+The live setup verified so far uses Steam, Proton, OpenComposite, WiVRn and Flatpak EDMC. Native EDMC path selection has been tested with a temporary installation. Heroic still needs an in-game check.
+
 ## Build and test
 
 ```sh

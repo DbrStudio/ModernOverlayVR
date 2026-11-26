@@ -58,5 +58,8 @@ for file in modern.py channel.py; do publish "$root/renderer/$file" "$dest/rende
 for file in vr_settings.py load.py; do publish "$root/edmc/$file" "$dest/$file" 644; done
 printf '%s/edmo-vr\n' "$(dirname "$plugins")" > "$build/data-path"
 publish "$build/data-path" "$prefix/data-path" 644
+printf '%s\n' "$plugins" > "$build/plugins-path"
+publish "$build/plugins-path" "$prefix/plugins-path" 644
+publish "$root/scripts/overlay-test" "$prefix/overlay-test" 755
 publish "$root/scripts/elite-layer.sh" "$prefix/elite-layer.sh" 755
 printf 'Installed wrapper: %s/elite-layer.sh\nInstalled plugin: %s\n' "$prefix" "$dest"

@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Send calibration blocks or a custom LegacyOverlay primitive through ModernOverlay."""
+import argparse
+import json
+import socket
+from pathlib import Path
+
+def grid():
+    for row, y in enumerate((16, 452, 888)):
+        for col, x in enumerate((16, 592, 1168)):
+            number = row * 3 + col + 1
+            prefix = f"edmo-test-grid-{number}"
+            color = ("#39c5bb", "#ff78be", "#ffb64a")[col]
+            yield dict(id=prefix, type="shape", shape="rect", x=x, y=y, w=96, h=56,
+                       color=color, fill=color)
+            yield dict(id=prefix+"-label", type="message", text=str(number), x=x+39,
+                       y=y+10, size="huge", color="#101018")
+
+
+def send(stream, payload):
+    line = json.dumps({"cli": "legacy_overlay", "payload": payload})
+    stream.write(line.encode() + b"\n")
+    stream.flush()
+    while reply := stream.readline():
+        data = json.loads(reply)
+        if "status" in data and "event" not in data:
+            if data["status"] != "ok":
+                raise ValueError(f"ModernOverlay: {data}")
+            return
+    raise ConnectionError("ModernOverlay closed the connection")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("payload", nargs="?", help="custom JSON primitive; omit for the 3×3 grid")
+    parser.add_argument("--ttl", type=int, default=60, help="duration in seconds (default 60)")
+    args = parser.parse_args()
+    if args.ttl < 1:
+        parser.error("--ttl must be positive")
+    try:
+        items = [json.loads(args.payload)] if args.payload else list(grid())
+        for item in items:
+            if not isinstance(item, dict) or not isinstance(item.get("id"), str) or not item["id"]:
+                parser.error("each primitive requires a string id")
+            item.setdefault("ttl", args.ttl)
+        config = Path(__file__).resolve().with_name("plugins-path")
+        plugins = Path(config.read_text().removesuffix("\n"))
+        port = json.loads((plugins / "EDMCModernOverlay/port.json").read_text())["port"]
+        with socket.create_connection(("127.0.0.1", port), timeout=5) as sock, sock.makefile("rwb") as stream:
+            for item in items:
+                send(stream, item)
+    except (OSError, ValueError, KeyError) as exc:
+        parser.exit(1, f"overlay-test: {exc}\n")
+    print(f"ModernOverlay accepted {len(items)} primitives.")
+
+
+if __name__ == "__main__":
+    main()
