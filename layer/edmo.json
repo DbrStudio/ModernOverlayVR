@@ -1,0 +1,10 @@
+{
+  "file_format_version": "1.0.0",
+  "api_layer": {
+    "name": "XR_APILAYER_EDMO_overlay",
+    "library_path": "./libedmo_openxr.so",
+    "api_version": "1.0",
+    "implementation_version": "1",
+    "description": "EDMC ModernOverlay VR probe, static panel and live renderer"
+  }
+}
