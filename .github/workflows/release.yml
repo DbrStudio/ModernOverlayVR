@@ -1,0 +1,39 @@
+name: Publish source release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Verify version and package tagged source
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^__version__ = "\([0-9.]*\)"$/\1/p' edmc/load.py)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$GITHUB_REF_NAME" == "v$version" ]]
+          base="ModernOverlayVR-$GITHUB_REF_NAME"
+          git archive --format=zip --prefix="$base/" --output="$base.zip" HEAD
+          unzip -tq "$base.zip"
+          sha256sum "$base.zip" > "$base.zip.sha256"
+          sha256sum -c "$base.zip.sha256"
+          hash=$(cut -d ' ' -f 1 "$base.zip.sha256")
+          printf 'Installer and source: `%s.zip`\n\nSHA-256: `%s`\n\n[VirusTotal hash lookup](https://www.virustotal.com/gui/file/%s)\n' "$base" "$hash" "$hash" > release-notes.md
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base="ModernOverlayVR-$GITHUB_REF_NAME"
+          gh release create "$GITHUB_REF_NAME" "$base.zip" "$base.zip.sha256" \
+            --verify-tag --title "ModernOverlayVR $GITHUB_REF_NAME" --notes-file release-notes.md
